@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<monit id="c796a91f7ac0427f4924d427e4d029a4" incarnation="1425629270" version="5.6">
+    <server>
+        <uptime>29161</uptime>
+        <poll>10</poll>
+        <startdelay>0</startdelay>
+        <localhostname>the.host.example.com</localhostname>
+        <controlfile>/etc/monit/monitrc</controlfile>
+        <httpd>
+            <address>0.0.0.0</address>
+            <port>2812</port>
+            <ssl>0</ssl>
+        </httpd>
+        <credentials>
+            <username>admin</username>
+            <password>monit</password>
+        </credentials>
+    </server>
+    <platform>
+        <name>Linux</name>
+        <release>3.13.0-46-generic</release>
+        <version>#77-Ubuntu SMP Mon Mar 2 18:26:13 UTC 2015</version>
+        <machine>i686</machine>
+        <cpu>2</cpu>
+        <memory>2064220</memory>
+        <swap>2095100</swap>
+    </platform>
+    <services>
+        <service name="the.host.example.com">
+            <type>5</type>
+            <collected_sec>1425658429</collected_sec>
+            <collected_usec>689647</collected_usec>
+            <status>0</status>
+            <status_hint>0</status_hint>
+            <monitor>1</monitor>
+            <monitormode>0</monitormode>
+            <pendingaction>0</pendingaction>
+            <system>
+                <load>
+                    <avg01>0.28</avg01>
+                    <avg05>0.41</avg05>
+                    <avg15>0.32</avg15>
+                </load>
+                <cpu>
+                    <user>3.4</user>
+                    <system>1.5</system>
+                    <wait>0.0</wait>
+                </cpu>
+                <memory>
+                    <percent>26.4</percent>
+                    <kilobyte>545124</kilobyte>
+                </memory>
+                <swap>
+                    <percent>0.0</percent>
+                    <kilobyte>0</kilobyte>
+                </swap>
+            </system>
+        </service>
+    </services>
+    <servicegroups/>
+</monit>
