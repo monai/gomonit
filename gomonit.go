@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 )
 
 type Server struct {
@@ -43,6 +44,40 @@ type Platform struct {
 }
 
 type Service struct {
+	Type          int    `xml:"type"`
+	CollectedSec  int    `xml:"collected_sec"`
+	CollectedUsec int    `xml:"collected_usec"`
+	Status        int    `xml:"status"`
+	StatusHint    int    `xml:"status_hint"`
+	Monitor       int    `xml:"monitor"`
+	MonitorMode   int    `xml:"monitormode"`
+	PendingAction int    `xml:"pendingaction"`
+	Load          Load   `xml:"system>load"`
+	Cpu           Cpu    `xml:"system>cpu"`
+	Memory        Memory `xml:"system>memory"`
+	Swap          Swap   `xml:"system>swap"`
+}
+
+type Load struct {
+	Avg01 float64 `xml:"avg01"`
+	Avg05 float64 `xml:"avg05"`
+	Avg15 float64 `xml:"avg15"`
+}
+
+type Cpu struct {
+	User   float64 `xml:"user"`
+	System float64 `xml:"system"`
+	Wait   float64 `xml:"wait"`
+}
+
+type Memory struct {
+	Percent  float64 `xml:"percent"`
+	Kilobyte int     `xml:"kilobyte"`
+}
+
+type Swap struct {
+	Percent  float64 `xml:"percent"`
+	Kilobyte int     `xml:"kilobyte"`
 }
 
 type Monit struct {
@@ -54,14 +89,20 @@ type Monit struct {
 	Services    []Service `xml:"services>service"`
 }
 
+func Parse(reader io.Reader) Monit {
+	var monit Monit
+
+	decoder := xml.NewDecoder(reader)
+	decoder.CharsetReader = charset.NewReader
+	decoder.DecodeElement(&monit, nil)
+
+	return monit
+}
+
 func MonitServer(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
-	var monit Monit
-
-	decoder := xml.NewDecoder(req.Body)
-	decoder.CharsetReader = charset.NewReader
-	decoder.DecodeElement(&monit, nil)
+	monit := Parse(req.Body)
 
 	log.Println("Got message from", monit)
 
@@ -73,9 +114,18 @@ func MonitServer(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/collector", MonitServer)
-	err := http.ListenAndServe(":5001", nil)
+	file, err := os.Open("stub.xml")
 	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+		log.Fatal(err)
 	}
+
+	monit := Parse(file)
+
+	log.Println(monit)
+
+	// http.HandleFunc("/collector", MonitServer)
+	// err := http.ListenAndServe(":5001", nil)
+	// if err != nil {
+	// 	log.Fatal("ListenAndServe: ", err)
+	// }
 }
