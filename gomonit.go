@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "bytes"
+	"bytes"
 	"code.google.com/p/go-charset/charset"
 	_ "code.google.com/p/go-charset/data"
 	"encoding/xml"
@@ -9,7 +9,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
+	// "os"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type Server struct {
@@ -44,6 +45,7 @@ type Platform struct {
 }
 
 type Service struct {
+	Name          string `xml:"name,attr"`
 	Type          int    `xml:"type"`
 	CollectedSec  int    `xml:"collected_sec"`
 	CollectedUsec int    `xml:"collected_usec"`
@@ -52,10 +54,25 @@ type Service struct {
 	Monitor       int    `xml:"monitor"`
 	MonitorMode   int    `xml:"monitormode"`
 	PendingAction int    `xml:"pendingaction"`
-	Load          Load   `xml:"system>load"`
-	Cpu           Cpu    `xml:"system>cpu"`
-	Memory        Memory `xml:"system>memory"`
-	Swap          Swap   `xml:"system>swap"`
+	Pid           int    `xml:"pid"`
+	PPid          int    `xml:"ppid"`
+	Uptime        int    `xml:"uptime"`
+	Children      int    `xml:"children"`
+	Cpu           Cpu    `xml:"cpu"`
+	Memory        Memory `xml:"memory"`
+	System        System `xml:"system"`
+}
+
+type ServiceGroup struct {
+	Name    string `xml:"name,attr"`
+	Service string `xml:"service"`
+}
+
+type System struct {
+	Cpu    Cpu    `xml:"cpu"`
+	Memory Memory `xml:"memory"`
+	Load   Load   `xml:"load"`
+	Swap   Swap   `xml:"swap"`
 }
 
 type Load struct {
@@ -80,13 +97,26 @@ type Swap struct {
 	Kilobyte int     `xml:"kilobyte"`
 }
 
+type Event struct {
+	CollectedSec  int    `xml:"collected_sec"`
+	CollectedUsec int    `xml:"collected_usec"`
+	Service       string `xml:"service"`
+	Type          int    `xml:"type"`
+	Id            int    `xml:"id"`
+	State         int    `xml:"state"`
+	Action        int    `xml:"action"`
+	Message       string `xml:"message,chardata"`
+}
+
 type Monit struct {
-	Id          string    `xml:"id,attr"`
-	Incarnation string    `xml:"incarnation,attr"`
-	Version     string    `xml:"version,attr"`
-	Server      Server    `xml:"server"`
-	Platform    Platform  `xml:"platform"`
-	Services    []Service `xml:"services>service"`
+	Id            string         `xml:"id,attr"`
+	Incarnation   string         `xml:"incarnation,attr"`
+	Version       string         `xml:"version,attr"`
+	Server        Server         `xml:"server"`
+	Platform      Platform       `xml:"platform"`
+	Services      []Service      `xml:"services>service"`
+	ServiceGroups []ServiceGroup `xml:"servicegroups>servicegroup"`
+	Event         Event          `xml:"event"`
 }
 
 func Parse(reader io.Reader) Monit {
@@ -99,33 +129,28 @@ func Parse(reader io.Reader) Monit {
 	return monit
 }
 
+func decode(reader io.Reader) string {
+	b := new(bytes.Buffer)
+	b.ReadFrom(reader)
+
+	return b.String()
+}
+
 func MonitServer(w http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	monit := Parse(req.Body)
 
-	log.Println("Got message from", monit)
+	log.Println("Got message from")
+	spew.Dump(monit)
 
-	// b := new(bytes.Buffer)
-	// b.ReadFrom(req.Body)
-	// log.Fatal(b.String())
-
-	io.WriteString(w, "hello, world!\n")
+	// spew.Dump(decode(req.Body))
 }
 
 func main() {
-	file, err := os.Open("stub.xml")
+	http.HandleFunc("/collector", MonitServer)
+	err := http.ListenAndServe(":5001", nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("ListenAndServe: ", err)
 	}
-
-	monit := Parse(file)
-
-	log.Println(monit)
-
-	// http.HandleFunc("/collector", MonitServer)
-	// err := http.ListenAndServe(":5001", nil)
-	// if err != nil {
-	// 	log.Fatal("ListenAndServe: ", err)
-	// }
 }
