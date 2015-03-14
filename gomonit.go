@@ -5,12 +5,10 @@ import (
 	"code.google.com/p/go-charset/charset"
 	_ "code.google.com/p/go-charset/data"
 	"encoding/xml"
-	// "fmt"
+	"github.com/davecgh/go-spew/spew"
 	"io"
 	"log"
 	"net/http"
-	// "os"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Server struct {
