@@ -129,6 +129,35 @@ func Parse(reader io.Reader) Monit {
 	return monit
 }
 
+type Collector struct {
+	channel chan *Monit
+}
+
+func NewCollector(channel chan *Monit) *Collector {
+	return &Collector{channel}
+}
+
+func (collector *Collector) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	MakeHTTPHandler(collector.channel)(w, r)
+}
+
+func (collector *Collector) Serve() {
+	http.HandleFunc("/collector", collector.ServeHTTP)
+	err := http.ListenAndServe(":5001", nil)
+	if err != nil {
+		log.Fatal("http.ListenAndServe: ", err)
+	}
+}
+
+func MakeHTTPHandler(out chan *Monit) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+
+		monit := Parse(r.Body)
+		out <- &monit
+	}
+}
+
 func decode(reader io.Reader) string {
 	b := new(bytes.Buffer)
 	b.ReadFrom(reader)
@@ -136,21 +165,13 @@ func decode(reader io.Reader) string {
 	return b.String()
 }
 
-func MonitServer(w http.ResponseWriter, req *http.Request) {
-	defer req.Body.Close()
-
-	monit := Parse(req.Body)
-
-	log.Println("Got message from")
-	spew.Dump(monit)
-
-	// spew.Dump(decode(req.Body))
-}
-
 func main() {
-	http.HandleFunc("/collector", MonitServer)
-	err := http.ListenAndServe(":5001", nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
+	channel := make(chan *Monit, 1)
+
+	collector := NewCollector(channel)
+	go collector.Serve()
+
+	for monit := range channel {
+		spew.Dump(monit)
 	}
 }
