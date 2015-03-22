@@ -9,8 +9,19 @@ import (
 	"io"
 	"log"
 	"net/http"
-    // "os"
+	// "os"
 )
+
+type Monit struct {
+	Id            string         `xml:"id,attr"`
+	Incarnation   string         `xml:"incarnation,attr"`
+	Version       string         `xml:"version,attr"`
+	Server        Server         `xml:"server"`
+	Platform      Platform       `xml:"platform"`
+	Services      []Service      `xml:"services>service"`
+	ServiceGroups []ServiceGroup `xml:"servicegroups>servicegroup"`
+	Event         Event          `xml:"event"`
+}
 
 type Server struct {
 	Uptime        int         `xml:"uptime"`
@@ -55,23 +66,45 @@ const (
 )
 
 type Service struct {
-	Name              string `xml:"name,attr"`
-	Type              int    `xml:"type"`
-	CollectedSec      int    `xml:"collected_sec"`
-	CollectedUsec     int    `xml:"collected_usec"`
-	Status            int    `xml:"status"`
-	StatusHint        int    `xml:"status_hint"`
-	Monitor           int    `xml:"monitor"`
-	MonitorMode       int    `xml:"monitormode"`
-	PendingAction     int    `xml:"pendingaction"`
-	FilesystemDetails Filesystem
-	DirectoryDetails  Directory
-	FileDetails       File
-	ProcessDetails    Process
-	SystemDetails     System `xml:"system"`
-	FifoDetails       Fifo
-	ProgramDetails    Program
-	NetDetails        Net
+	Name          string         `xml:"name,attr"`
+	Type          uint           `xml:"type"`
+	CollectedSec  uint           `xml:"collected_sec"`
+	CollectedUsec uint           `xml:"collected_usec"`
+	Status        uint           `xml:"status"`
+	StatusHint    uint           `xml:"status_hint"`
+	Monitor       uint           `xml:"monitor"`
+	MonitorMode   uint           `xml:"monitormode"`
+	PendingAction uint           `xml:"pendingaction"`
+	Mode          string         `xml:"mode"`
+	Uid           uint           `xml:"uid"`
+	Gid           uint           `xml:"gid"`
+	Flags         uint           `xml:"flags"`
+	Block         FilesystemSize `xml:"block"`
+	Inode         FilesystemSize `xml:"inode"`
+	Timestamp     uint64         `xml:"timestamp"`
+	Size          uint64         `xml:"size"`
+	Pid           uint           `xml:"pid"`
+	PPid          uint           `xml:"ppid"`
+	Euid          uint           `xml:"euid"`
+	Uptime        uint64         `xml:"uptime"`
+	Children      uint           `xml:"children"`
+	Memory        Memory         `xml:"memory"`
+	Cpu           ProcessCpu     `xml:"cpu"`
+	System        System         `xml:"system"`
+	Program       Program        `xml:"program"`
+	Net           Net            `xml:"link"`
+}
+
+type ServiceCommon struct {
+	Name          string `xml:"name,attr"`
+	Type          uint   `xml:"type"`
+	CollectedSec  uint   `xml:"collected_sec"`
+	CollectedUsec uint   `xml:"collected_usec"`
+	Status        uint   `xml:"status"`
+	StatusHint    uint   `xml:"status_hint"`
+	Monitor       uint   `xml:"monitor"`
+	MonitorMode   uint   `xml:"monitormode"`
+	PendingAction uint   `xml:"pendingaction"`
 }
 
 type Filesystem struct {
@@ -125,14 +158,10 @@ type Fifo struct {
 type Program struct {
 	Started uint64 `xml:"started"`
 	Status  uint   `xml:"status"`
-	Output  string `xml:"output,chardata"`
+	Output  string `xml:"output"`
 }
 
 type Net struct {
-	Link NetLink `xml:"link"`
-}
-
-type NetLink struct {
 	State     uint         `xml:"state"`
 	Speed     uint64       `xml:"speed"`
 	Duplex    uint         `xml:"duplex"`
@@ -201,50 +230,6 @@ type Event struct {
 	Message       string `xml:"message,chardata"`
 	Token         string `xml:"token"`
 }
-
-type Monit struct {
-	Id            string         `xml:"id,attr"`
-	Incarnation   string         `xml:"incarnation,attr"`
-	Version       string         `xml:"version,attr"`
-	Server        Server         `xml:"server"`
-	Platform      Platform       `xml:"platform"`
-	Services      []Service      `xml:"services>service"`
-	ServiceGroups []ServiceGroup `xml:"servicegroups>servicegroup"`
-	Event         Event          `xml:"event"`
-}
-
-type ServiceType struct {
-	Type int `xml:"type"`
-}
-
-// func (service *Service) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
-//     var err error
-//     var st ServiceType
-//     // var p Process
-//
-//     start2 := start.Copy()
-//
-//     if err = d.DecodeElement(&st, &start); err != nil {
-//         spew.Dump(err)
-//         return err
-//     }
-//
-//     if err = d.DecodeElement(&st, &start2); err != nil {
-//         spew.Dump(err)
-//         return err
-//     }
-//
-//     if st.Type == 3 {
-//         // if err = d.DecodeElement(&p, &start); err != nil {
-//         //     spew.Dump(err)
-//         //     return err
-//         // }
-//     }
-//
-//     // spew.Dump(p)
-//
-//     return nil
-// }
 
 func Parse(reader io.Reader) Monit {
 	var monit Monit
