@@ -291,10 +291,10 @@ func main() {
 	go collector.Serve()
 
 	for monit := range channel {
-        for _, service := range monit.Services {
-            // if service.Type == ServiceTypeProgram {
-                spew.Dump(service)
-            // }
-        }
+		for _, service := range monit.Services {
+			// if service.Type == ServiceTypeProgram {
+			spew.Dump(service)
+			// }
+		}
 	}
 }
