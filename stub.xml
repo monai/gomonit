@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<monit id="c796a91f7ac0427f4924d427e4d029a4" incarnation="1425629270" version="5.6">
+<monit id="046455007b101404405f6741927c0072" incarnation="1427018447" version="5.6">
     <server>
-        <uptime>29161</uptime>
+        <uptime>269</uptime>
         <poll>10</poll>
         <startdelay>0</startdelay>
-        <localhostname>the.host.example.com</localhostname>
-        <controlfile>/etc/monit/monitrc</controlfile>
+        <localhostname>localhost.localdomain</localhostname>
+        <controlfile>/etc/monitrc</controlfile>
         <httpd>
-            <address>0.0.0.0</address>
+            <address>localhost</address>
             <port>2812</port>
             <ssl>0</ssl>
         </httpd>
@@ -18,18 +18,66 @@
     </server>
     <platform>
         <name>Linux</name>
-        <release>3.13.0-46-generic</release>
-        <version>#77-Ubuntu SMP Mon Mar 2 18:26:13 UTC 2015</version>
-        <machine>i686</machine>
-        <cpu>2</cpu>
-        <memory>2064220</memory>
-        <swap>2095100</swap>
+        <release>3.10.0-123.20.1.el7.x86_64</release>
+        <version>#1 SMP Thu Jan 29 18:05:33 UTC 2015</version>
+        <machine>x86_64</machine>
+        <cpu>1</cpu>
+        <memory>469400</memory>
+        <swap>1081340</swap>
     </platform>
     <services>
-        <service name="the.host.example.com">
+        <service name="postfix">
+            <type>3</type>
+            <collected_sec>1427018707</collected_sec>
+            <collected_usec>305872</collected_usec>
+            <status>0</status>
+            <status_hint>0</status_hint>
+            <monitor>1</monitor>
+            <monitormode>0</monitormode>
+            <pendingaction>0</pendingaction>
+            <pid>1160</pid>
+            <ppid>1</ppid>
+            <uptime>513</uptime>
+            <children>2</children>
+            <memory>
+                <percent>0.4</percent>
+                <percenttotal>2.0</percenttotal>
+                <kilobyte>2080</kilobyte>
+                <kilobytetotal>9852</kilobytetotal>
+            </memory>
+            <cpu>
+                <percent>0.0</percent>
+                <percenttotal>0.0</percenttotal>
+            </cpu>
+        </service>
+        <service name="datafs">
+            <type>0</type>
+            <collected_sec>1427018707</collected_sec>
+            <collected_usec>305987</collected_usec>
+            <status>0</status>
+            <status_hint>0</status_hint>
+            <monitor>1</monitor>
+            <monitormode>0</monitormode>
+            <pendingaction>0</pendingaction>
+            <mode>660</mode>
+            <uid>0</uid>
+            <gid>6</gid>
+            <flags>4096</flags>
+            <block>
+                <percent>3.4</percent>
+                <usage>1354.2</usage>
+                <total>39380.8</total>
+            </block>
+            <inode>
+                <percent>0.1</percent>
+                <usage>49102</usage>
+                <total>40345600</total>
+            </inode>
+        </service>
+        <service name="localhost.localdomain">
             <type>5</type>
-            <collected_sec>1425658429</collected_sec>
-            <collected_usec>689647</collected_usec>
+            <collected_sec>1427018707</collected_sec>
+            <collected_usec>305987</collected_usec>
             <status>0</status>
             <status_hint>0</status_hint>
             <monitor>1</monitor>
@@ -37,18 +85,18 @@
             <pendingaction>0</pendingaction>
             <system>
                 <load>
-                    <avg01>0.28</avg01>
-                    <avg05>0.41</avg05>
-                    <avg15>0.32</avg15>
+                    <avg01>0.00</avg01>
+                    <avg05>0.01</avg05>
+                    <avg15>0.01</avg15>
                 </load>
                 <cpu>
-                    <user>3.4</user>
-                    <system>1.5</system>
+                    <user>0.0</user>
+                    <system>0.0</system>
                     <wait>0.0</wait>
                 </cpu>
                 <memory>
-                    <percent>26.4</percent>
-                    <kilobyte>545124</kilobyte>
+                    <percent>21.8</percent>
+                    <kilobyte>102552</kilobyte>
                 </memory>
                 <swap>
                     <percent>0.0</percent>
@@ -57,5 +105,10 @@
             </system>
         </service>
     </services>
-    <servicegroups/>
+    <servicegroups>
+        <servicegroup name="tmp">
+            <service>datafs</service>
+            <service>postfix</service>
+        </servicegroup>
+    </servicegroups>
 </monit>
