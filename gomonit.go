@@ -6,6 +6,7 @@ import (
 	_ "code.google.com/p/go-charset/data"
 	"encoding/xml"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/fatih/structs"
 	"io"
 	"log"
 	"net/http"
@@ -55,14 +56,14 @@ type Platform struct {
 }
 
 const (
-	ServiceTypeFilesystem int = 0
-	ServiceTypeDirectory      = 1
-	ServiceTypeFile           = 2
-	ServiceTypeProcess        = 3
-	ServiceTypeSystem         = 5
-	ServiceTypeFifo           = 6
-	ServiceTypeProgram        = 7
-	ServiceTypeNet            = 8
+	ServiceTypeFilesystem uint = 0
+	ServiceTypeDirectory       = 1
+	ServiceTypeFile            = 2
+	ServiceTypeProcess         = 3
+	ServiceTypeSystem          = 5
+	ServiceTypeFifo            = 6
+	ServiceTypeProgram         = 7
+	ServiceTypeNet             = 8
 )
 
 type Service struct {
@@ -90,30 +91,58 @@ type Service struct {
 	Children      uint           `xml:"children"`
 	Memory        Memory         `xml:"memory"`
 	Cpu           ProcessCpu     `xml:"cpu"`
-	System        System         `xml:"system"`
+	System        ServiceSystem  `xml:"system"`
 	Program       Program        `xml:"program"`
 	Net           Net            `xml:"link"`
 }
 
-type ServiceCommon struct {
-	Name          string `xml:"name,attr"`
-	Type          uint   `xml:"type"`
-	CollectedSec  uint   `xml:"collected_sec"`
-	CollectedUsec uint   `xml:"collected_usec"`
-	Status        uint   `xml:"status"`
-	StatusHint    uint   `xml:"status_hint"`
-	Monitor       uint   `xml:"monitor"`
-	MonitorMode   uint   `xml:"monitormode"`
-	PendingAction uint   `xml:"pendingaction"`
+func (service *Service) GetFilesystem() (Filesystem, error) {
+	var filesystem Filesystem
+
+	copy(service, &filesystem)
+
+	return filesystem, nil
+}
+
+func (service *Service) GetSystem() (System, error) {
+	var system System
+
+	copy(service, &system)
+
+	return system, nil
+}
+
+func copy(src interface{}, dest interface{}) {
+	srcStruct := structs.New(src)
+	destStruct := structs.New(dest)
+
+	for _, destField := range destStruct.Fields() {
+		srcField, ok := srcStruct.FieldOk(destField.Name())
+		srcValue := srcField.Value()
+
+		if ok {
+			destField.Set(srcValue)
+		}
+
+	}
 }
 
 type Filesystem struct {
-	Mode  string         `xml:"mode"`
-	Uid   uint           `xml:"uid"`
-	Gid   uint           `xml:"gid"`
-	Flags uint           `xml:"flags"`
-	Block FilesystemSize `xml:"block"`
-	Inode FilesystemSize `xml:"inode"`
+	Name          string         `xml:"name,attr"`
+	Type          uint           `xml:"type"`
+	CollectedSec  uint           `xml:"collected_sec"`
+	CollectedUsec uint           `xml:"collected_usec"`
+	Status        uint           `xml:"status"`
+	StatusHint    uint           `xml:"status_hint"`
+	Monitor       uint           `xml:"monitor"`
+	MonitorMode   uint           `xml:"monitormode"`
+	PendingAction uint           `xml:"pendingaction"`
+	Mode          string         `xml:"mode"`
+	Uid           uint           `xml:"uid"`
+	Gid           uint           `xml:"gid"`
+	Flags         uint           `xml:"flags"`
+	Block         FilesystemSize `xml:"block"`
+	Inode         FilesystemSize `xml:"inode"`
 }
 
 type FilesystemSize struct {
@@ -123,77 +152,137 @@ type FilesystemSize struct {
 }
 
 type Directory struct {
-	Mode      string `xml:"mode"`
-	Uid       uint   `xml:"uid"`
-	Gid       uint   `xml:"gid"`
-	Timestamp uint64 `xml:"timestamp"`
+	Name          string `xml:"name,attr"`
+	Type          uint   `xml:"type"`
+	CollectedSec  uint   `xml:"collected_sec"`
+	CollectedUsec uint   `xml:"collected_usec"`
+	Status        uint   `xml:"status"`
+	StatusHint    uint   `xml:"status_hint"`
+	Monitor       uint   `xml:"monitor"`
+	MonitorMode   uint   `xml:"monitormode"`
+	PendingAction uint   `xml:"pendingaction"`
+	Mode          string `xml:"mode"`
+	Uid           uint   `xml:"uid"`
+	Gid           uint   `xml:"gid"`
+	Timestamp     uint64 `xml:"timestamp"`
 }
 
 type File struct {
-	Mode      string `xml:"mode"`
-	Uid       uint   `xml:"uid"`
-	Gid       uint   `xml:"gid"`
-	Timestamp uint64 `xml:"timestamp"`
-	Size      uint64 `xml:"size"`
+	Name          string `xml:"name,attr"`
+	Type          uint   `xml:"type"`
+	CollectedSec  uint   `xml:"collected_sec"`
+	CollectedUsec uint   `xml:"collected_usec"`
+	Status        uint   `xml:"status"`
+	StatusHint    uint   `xml:"status_hint"`
+	Monitor       uint   `xml:"monitor"`
+	MonitorMode   uint   `xml:"monitormode"`
+	PendingAction uint   `xml:"pendingaction"`
+	Mode          string `xml:"mode"`
+	Uid           uint   `xml:"uid"`
+	Gid           uint   `xml:"gid"`
+	Timestamp     uint64 `xml:"timestamp"`
+	Size          uint64 `xml:"size"`
 }
 
 type Process struct {
-	Pid      uint       `xml:"pid"`
-	PPid     uint       `xml:"ppid"`
-	Euid     uint       `xml:"euid"`
-	Gid      uint       `xml:"gid"`
-	Uptime   uint64     `xml:"uptime"`
-	Children uint       `xml:"children"`
-	Memory   Memory     `xml:"memory"`
-	Cpu      ProcessCpu `xml:"cpu"`
-}
-
-type Fifo struct {
-	Mode      string `xml:"mode"`
-	Uid       uint   `xml:"uid"`
-	Gid       uint   `xml:"gid"`
-	Timestamp uint64 `xml:"timestamp"`
-}
-
-type Program struct {
-	Started uint64 `xml:"started"`
-	Status  uint   `xml:"status"`
-	Output  string `xml:"output"`
-}
-
-type Net struct {
-	State     uint         `xml:"state"`
-	Speed     uint64       `xml:"speed"`
-	Duplex    uint         `xml:"duplex"`
-	DlPackets NetLinkCount `xml:"download>packets"`
-	DlBytes   NetLinkCount `xml:"download>bytes"`
-	DlErrors  NetLinkCount `xml:"download>errors"`
-	UlPackets NetLinkCount `xml:"upload>packets"`
-	UlBytes   NetLinkCount `xml:"upload>bytes"`
-	UlErrors  NetLinkCount `xml:"upload>errors"`
-}
-
-type NetLinkCount struct {
-	Now   uint64 `xml:"now"`
-	Total uint64 `xml:"total"`
-}
-
-type ServiceGroup struct {
-	Name    string `xml:"name,attr"`
-	Service string `xml:"service"`
+	Name          string     `xml:"name,attr"`
+	Type          uint       `xml:"type"`
+	CollectedSec  uint       `xml:"collected_sec"`
+	CollectedUsec uint       `xml:"collected_usec"`
+	Status        uint       `xml:"status"`
+	StatusHint    uint       `xml:"status_hint"`
+	Monitor       uint       `xml:"monitor"`
+	MonitorMode   uint       `xml:"monitormode"`
+	PendingAction uint       `xml:"pendingaction"`
+	Pid           uint       `xml:"pid"`
+	PPid          uint       `xml:"ppid"`
+	Euid          uint       `xml:"euid"`
+	Gid           uint       `xml:"gid"`
+	Uptime        uint64     `xml:"uptime"`
+	Children      uint       `xml:"children"`
+	Memory        Memory     `xml:"memory"`
+	Cpu           ProcessCpu `xml:"cpu"`
 }
 
 type System struct {
+	Name          string    `xml:"name,attr"`
+	Type          uint      `xml:"type"`
+	CollectedSec  uint      `xml:"collected_sec"`
+	CollectedUsec uint      `xml:"collected_usec"`
+	Status        uint      `xml:"status"`
+	StatusHint    uint      `xml:"status_hint"`
+	Monitor       uint      `xml:"monitor"`
+	MonitorMode   uint      `xml:"monitormode"`
+	PendingAction uint      `xml:"pendingaction"`
+	Cpu           SystemCpu `xml:"system>cpu"`
+	Memory        Memory    `xml:"system>memory"`
+	Load          Load      `xml:"system>load"`
+	Swap          Swap      `xml:"system>swap"`
+}
+
+type Fifo struct {
+	Name          string `xml:"name,attr"`
+	Type          uint   `xml:"type"`
+	CollectedSec  uint   `xml:"collected_sec"`
+	CollectedUsec uint   `xml:"collected_usec"`
+	Status        uint   `xml:"status"`
+	StatusHint    uint   `xml:"status_hint"`
+	Monitor       uint   `xml:"monitor"`
+	MonitorMode   uint   `xml:"monitormode"`
+	PendingAction uint   `xml:"pendingaction"`
+	Mode          string `xml:"mode"`
+	Uid           uint   `xml:"uid"`
+	Gid           uint   `xml:"gid"`
+	Timestamp     uint64 `xml:"timestamp"`
+}
+
+type Program struct {
+	Name          string `xml:"name,attr"`
+	Type          uint   `xml:"type"`
+	CollectedSec  uint   `xml:"collected_sec"`
+	CollectedUsec uint   `xml:"collected_usec"`
+	Status        uint   `xml:"status"`
+	StatusHint    uint   `xml:"status_hint"`
+	Monitor       uint   `xml:"monitor"`
+	MonitorMode   uint   `xml:"monitormode"`
+	PendingAction uint   `xml:"pendingaction"`
+	Started       uint64 `xml:"started"`
+	Output        string `xml:"output"`
+}
+
+type Net struct {
+	Name          string       `xml:"name,attr"`
+	Type          uint         `xml:"type"`
+	CollectedSec  uint         `xml:"collected_sec"`
+	CollectedUsec uint         `xml:"collected_usec"`
+	Status        uint         `xml:"status"`
+	StatusHint    uint         `xml:"status_hint"`
+	Monitor       uint         `xml:"monitor"`
+	MonitorMode   uint         `xml:"monitormode"`
+	PendingAction uint         `xml:"pendingaction"`
+	State         uint         `xml:"state"`
+	Speed         uint64       `xml:"speed"`
+	Duplex        uint         `xml:"duplex"`
+	DlPackets     NetLinkCount `xml:"download>packets"`
+	DlBytes       NetLinkCount `xml:"download>bytes"`
+	DlErrors      NetLinkCount `xml:"download>errors"`
+	UlPackets     NetLinkCount `xml:"upload>packets"`
+	UlBytes       NetLinkCount `xml:"upload>bytes"`
+	UlErrors      NetLinkCount `xml:"upload>errors"`
+}
+
+type ServiceSystem struct {
 	Cpu    SystemCpu `xml:"cpu"`
 	Memory Memory    `xml:"memory"`
 	Load   Load      `xml:"load"`
 	Swap   Swap      `xml:"swap"`
 }
 
-type Load struct {
-	Avg01 float64 `xml:"avg01"`
-	Avg05 float64 `xml:"avg05"`
-	Avg15 float64 `xml:"avg15"`
+type Memory struct {
+	Percent       float64 `xml:"percent"`
+	PercentTotal  float64 `xml:"percenttotal"`
+	Kilobyte      uint    `xml:"kilobyte"`
+	KilobyteTotal uint    `xml:"kilobytetotal"`
 }
 
 type SystemCpu struct {
@@ -207,16 +296,25 @@ type ProcessCpu struct {
 	PercentTotal float64 `xml:"percenttotal"`
 }
 
-type Memory struct {
-	Percent       float64 `xml:"percent"`
-	PercentTotal  float64 `xml:"percenttotal"`
-	Kilobyte      uint    `xml:"kilobyte"`
-	KilobyteTotal uint    `xml:"kilobytetotal"`
+type Load struct {
+	Avg01 float64 `xml:"avg01"`
+	Avg05 float64 `xml:"avg05"`
+	Avg15 float64 `xml:"avg15"`
 }
 
 type Swap struct {
 	Percent  float64 `xml:"percent"`
 	Kilobyte int     `xml:"kilobyte"`
+}
+
+type NetLinkCount struct {
+	Now   uint64 `xml:"now"`
+	Total uint64 `xml:"total"`
+}
+
+type ServiceGroup struct {
+	Name    string `xml:"name,attr"`
+	Service string `xml:"service"`
 }
 
 type Event struct {
@@ -292,9 +390,10 @@ func main() {
 
 	for monit := range channel {
 		for _, service := range monit.Services {
-			// if service.Type == ServiceTypeProgram {
-			spew.Dump(service)
-			// }
+			if service.Type == ServiceTypeFilesystem {
+				system, _ := service.GetFilesystem()
+				spew.Dump(system)
+			}
 		}
 	}
 }
