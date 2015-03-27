@@ -10,7 +10,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	// "os"
 )
 
 type Monit struct {
@@ -92,24 +91,78 @@ type Service struct {
 	Memory        Memory         `xml:"memory"`
 	Cpu           ProcessCpu     `xml:"cpu"`
 	System        ServiceSystem  `xml:"system"`
-	Program       Program        `xml:"program"`
-	Net           Net            `xml:"link"`
+	Program       ServiceProgram `xml:"program"`
+	Link          Link           `xml:"link"`
 }
 
 func (service *Service) GetFilesystem() (Filesystem, error) {
 	var filesystem Filesystem
-
 	copy(service, &filesystem)
-
 	return filesystem, nil
+}
+
+func (service *Service) GetDirectory() (Directory, error) {
+	var directory Directory
+	copy(service, &directory)
+	return directory, nil
+}
+
+func (service *Service) GetFile() (File, error) {
+	var file File
+	copy(service, &file)
+	return file, nil
+}
+
+func (service *Service) GetProcess() (Process, error) {
+	var process Process
+	copy(service, &process)
+	return process, nil
 }
 
 func (service *Service) GetSystem() (System, error) {
 	var system System
 
-	copy(service, &system)
+	copyCommon(service, &system)
+	system.Cpu = service.System.Cpu
+	system.Memory = service.System.Memory
+	system.Load = service.System.Load
+	system.Swap = service.System.Swap
 
 	return system, nil
+}
+
+func (service *Service) GetFifo() (Fifo, error) {
+	var fifo Fifo
+	copy(service, &fifo)
+	return fifo, nil
+}
+
+func (service *Service) GetProgram() (Program, error) {
+	var program Program
+
+	copyCommon(service, &program)
+	program.Status = service.Program.Status
+	program.Started = service.Program.Started
+	program.Output = service.Program.Output
+
+	return program, nil
+}
+
+func (service *Service) GetNet() (Net, error) {
+	var net Net
+
+	copyCommon(service, &net)
+	net.State = service.Link.State
+	net.Speed = service.Link.Speed
+	net.Duplex = service.Link.Duplex
+	net.DlPackets = service.Link.DlPackets
+	net.DlBytes = service.Link.DlBytes
+	net.DlErrors = service.Link.DlErrors
+	net.UlPackets = service.Link.UlPackets
+	net.UlBytes = service.Link.UlBytes
+	net.UlErrors = service.Link.UlErrors
+
+	return net, nil
 }
 
 func copy(src interface{}, dest interface{}) {
@@ -124,6 +177,29 @@ func copy(src interface{}, dest interface{}) {
 			destField.Set(srcValue)
 		}
 
+	}
+}
+
+func copyCommon(src interface{}, dest interface{}) {
+	keys := [9]string{
+		"Name",
+		"Type",
+		"CollectedSec",
+		"CollectedUsec",
+		"Status",
+		"StatusHint",
+		"Monitor",
+		"MonitorMode",
+		"PendingAction"}
+
+	srcMap := structs.Map(src)
+	destStruct := structs.New(dest)
+
+	for _, key := range keys {
+		field, ok := destStruct.FieldOk(key)
+		if ok {
+			field.Set(srcMap[key])
+		}
 	}
 }
 
@@ -278,6 +354,12 @@ type ServiceSystem struct {
 	Swap   Swap      `xml:"swap"`
 }
 
+type ServiceProgram struct {
+	Status  uint   `xml:"status"`
+	Started uint64 `xml:"started"`
+	Output  string `xml:"output"`
+}
+
 type Memory struct {
 	Percent       float64 `xml:"percent"`
 	PercentTotal  float64 `xml:"percenttotal"`
@@ -305,6 +387,18 @@ type Load struct {
 type Swap struct {
 	Percent  float64 `xml:"percent"`
 	Kilobyte int     `xml:"kilobyte"`
+}
+
+type Link struct {
+	State     uint         `xml:"state"`
+	Speed     uint64       `xml:"speed"`
+	Duplex    uint         `xml:"duplex"`
+	DlPackets NetLinkCount `xml:"download>packets"`
+	DlBytes   NetLinkCount `xml:"download>bytes"`
+	DlErrors  NetLinkCount `xml:"download>errors"`
+	UlPackets NetLinkCount `xml:"upload>packets"`
+	UlBytes   NetLinkCount `xml:"upload>bytes"`
+	UlErrors  NetLinkCount `xml:"upload>errors"`
 }
 
 type NetLinkCount struct {
@@ -390,8 +484,8 @@ func main() {
 
 	for monit := range channel {
 		for _, service := range monit.Services {
-			if service.Type == ServiceTypeFilesystem {
-				system, _ := service.GetFilesystem()
+			if service.Type == ServiceTypeSystem {
+				system, _ := service.GetSystem()
 				spew.Dump(system)
 			}
 		}
