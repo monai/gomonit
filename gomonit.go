@@ -433,7 +433,7 @@ func Parse(reader io.Reader) Monit {
 }
 
 type Collector struct {
-	channel chan *Monit
+	Channel chan *Monit
 }
 
 func NewCollector(channel chan *Monit) *Collector {
@@ -441,12 +441,12 @@ func NewCollector(channel chan *Monit) *Collector {
 }
 
 func (collector *Collector) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	MakeHTTPHandler(collector.channel)(w, r)
+	MakeHTTPHandler(collector.Channel)(w, r)
 }
 
 func (collector *Collector) Serve() {
 	http.HandleFunc("/collector", collector.ServeHTTP)
-	err := http.ListenAndServe(":5001", nil)
+	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("http.ListenAndServe: ", err)
 	}
