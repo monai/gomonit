@@ -1,11 +1,10 @@
-package main
+package gomonit
 
 import (
 	"bytes"
 	"code.google.com/p/go-charset/charset"
 	_ "code.google.com/p/go-charset/data"
 	"encoding/xml"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/fatih/structs"
 	"io"
 	"log"
@@ -467,27 +466,4 @@ func decode(reader io.Reader) string {
 	b.ReadFrom(reader)
 
 	return b.String()
-}
-
-func main() {
-	// var monit Monit
-
-	// file, _ := os.Open("stub.xml")
-	// _ = Parse(file)
-
-	// spew.Dump(monit)
-
-	channel := make(chan *Monit, 1)
-
-	collector := NewCollector(channel)
-	go collector.Serve()
-
-	for monit := range channel {
-		for _, service := range monit.Services {
-			if service.Type == ServiceTypeSystem {
-				system, _ := service.GetSystem()
-				spew.Dump(system)
-			}
-		}
-	}
 }
