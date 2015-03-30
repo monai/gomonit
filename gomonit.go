@@ -422,13 +422,24 @@ type Event struct {
 	Token         string `xml:"token"`
 }
 
-func Parse(reader io.Reader) Monit {
-	var monit Monit
+type Decoder interface {
+	DecodeElement(interface{}, *xml.StartElement) error
+}
 
+type Parser struct {
+	Decoder Decoder
+}
+
+func NewParser(reader io.Reader) *Parser {
 	decoder := xml.NewDecoder(reader)
 	decoder.CharsetReader = charset.NewReader
-	decoder.DecodeElement(&monit, nil)
 
+	return &Parser{decoder}
+}
+
+func (parser *Parser) Parse() Monit {
+	var monit Monit
+	parser.Decoder.DecodeElement(&monit, nil)
 	return monit
 }
 
@@ -456,7 +467,8 @@ func MakeHTTPHandler(out chan *Monit) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 
-		monit := Parse(r.Body)
+		parser := NewParser(r.Body)
+		monit := parser.Parse()
 		out <- &monit
 	}
 }
