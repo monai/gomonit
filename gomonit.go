@@ -445,14 +445,16 @@ func (parser *Parser) Parse() Monit {
 
 type Collector struct {
 	Channel chan *Monit
+	Handler http.HandlerFunc
 }
 
 func NewCollector(channel chan *Monit) *Collector {
-	return &Collector{channel}
+	handler := MakeHTTPHandler(channel)
+	return &Collector{channel, handler}
 }
 
 func (collector *Collector) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	MakeHTTPHandler(collector.Channel)(w, r)
+	collector.Handler(w, r)
 }
 
 func (collector *Collector) Serve() {
