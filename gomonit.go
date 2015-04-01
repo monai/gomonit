@@ -476,10 +476,3 @@ func MakeHTTPHandler(out chan *Monit) http.HandlerFunc {
 		out <- &monit
 	}
 }
-
-func decode(reader io.Reader) string {
-	b := new(bytes.Buffer)
-	b.ReadFrom(reader)
-
-	return b.String()
-}
