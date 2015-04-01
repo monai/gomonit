@@ -1,7 +1,6 @@
 package gomonit
 
 import (
-	"bytes"
 	"code.google.com/p/go-charset/charset"
 	_ "code.google.com/p/go-charset/data"
 	"encoding/xml"
