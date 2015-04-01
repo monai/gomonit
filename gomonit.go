@@ -4,6 +4,7 @@ import (
 	"code.google.com/p/go-charset/charset"
 	_ "code.google.com/p/go-charset/data"
 	"encoding/xml"
+	"errors"
 	"github.com/fatih/structs"
 	"io"
 	"log"
@@ -95,72 +96,122 @@ type Service struct {
 
 func (service *Service) GetFilesystem() (Filesystem, error) {
 	var filesystem Filesystem
-	copy(service, &filesystem)
-	return filesystem, nil
+	var err error = nil
+
+	if service.Type == ServiceTypeFilesystem {
+		copy(service, &filesystem)
+	} else {
+		err = errors.New("Service type is not Filesystem")
+	}
+
+	return filesystem, err
 }
 
 func (service *Service) GetDirectory() (Directory, error) {
 	var directory Directory
-	copy(service, &directory)
-	return directory, nil
+	var err error = nil
+
+	if service.Type == ServiceTypeDirectory {
+		copy(service, &directory)
+	} else {
+		err = errors.New("Service type is not Directory")
+	}
+
+	return directory, err
 }
 
 func (service *Service) GetFile() (File, error) {
 	var file File
-	copy(service, &file)
-	return file, nil
+	var err error = nil
+
+	if service.Type == ServiceTypeFile {
+		copy(service, &file)
+	} else {
+		err = errors.New("Service type is not File")
+	}
+
+	return file, err
 }
 
 func (service *Service) GetProcess() (Process, error) {
 	var process Process
-	copy(service, &process)
-	return process, nil
+	var err error = nil
+
+	if service.Type == ServiceTypeProcess {
+		copy(service, &process)
+	} else {
+		err = errors.New("Service type is not Process")
+	}
+
+	return process, err
 }
 
 func (service *Service) GetSystem() (System, error) {
 	var system System
+	var err error = nil
 
-	copyCommon(service, &system)
-	system.Cpu = service.System.Cpu
-	system.Memory = service.System.Memory
-	system.Load = service.System.Load
-	system.Swap = service.System.Swap
+	if service.Type == ServiceTypeSystem {
+		copyCommon(service, &system)
+		system.Cpu = service.System.Cpu
+		system.Memory = service.System.Memory
+		system.Load = service.System.Load
+		system.Swap = service.System.Swap
+	} else {
+		err = errors.New("Service type is not System")
+	}
 
-	return system, nil
+	return system, err
 }
 
 func (service *Service) GetFifo() (Fifo, error) {
 	var fifo Fifo
-	copy(service, &fifo)
-	return fifo, nil
+	var err error = nil
+
+	if service.Type == ServiceTypeFifo {
+		copy(service, &fifo)
+	} else {
+		err = errors.New("Service type is not Fifo")
+	}
+
+	return fifo, err
 }
 
 func (service *Service) GetProgram() (Program, error) {
 	var program Program
+	var err error = nil
 
-	copyCommon(service, &program)
-	program.Status = service.Program.Status
-	program.Started = service.Program.Started
-	program.Output = service.Program.Output
+	if service.Type == ServiceTypeProgram {
+		copyCommon(service, &program)
+		program.Status = service.Program.Status
+		program.Started = service.Program.Started
+		program.Output = service.Program.Output
+	} else {
+		err = errors.New("Service type is not Program")
+	}
 
-	return program, nil
+	return program, err
 }
 
 func (service *Service) GetNet() (Net, error) {
 	var net Net
+	var err error = nil
 
-	copyCommon(service, &net)
-	net.State = service.Link.State
-	net.Speed = service.Link.Speed
-	net.Duplex = service.Link.Duplex
-	net.DlPackets = service.Link.DlPackets
-	net.DlBytes = service.Link.DlBytes
-	net.DlErrors = service.Link.DlErrors
-	net.UlPackets = service.Link.UlPackets
-	net.UlBytes = service.Link.UlBytes
-	net.UlErrors = service.Link.UlErrors
+	if service.Type == ServiceTypeNet {
+		copyCommon(service, &net)
+		net.State = service.Link.State
+		net.Speed = service.Link.Speed
+		net.Duplex = service.Link.Duplex
+		net.DlPackets = service.Link.DlPackets
+		net.DlBytes = service.Link.DlBytes
+		net.DlErrors = service.Link.DlErrors
+		net.UlPackets = service.Link.UlPackets
+		net.UlBytes = service.Link.UlBytes
+		net.UlErrors = service.Link.UlErrors
+	} else {
+		err = errors.New("Service type is not Net")
+	}
 
-	return net, nil
+	return net, err
 }
 
 func copy(src interface{}, dest interface{}) {
