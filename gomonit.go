@@ -444,13 +444,15 @@ func (parser *Parser) Parse() Monit {
 }
 
 type Collector struct {
-	Channel chan *Monit
-	Handler http.HandlerFunc
+	Channel  chan *Monit
+	ServeMux *http.ServeMux
+	Handler  http.HandlerFunc
 }
 
 func NewCollector(channel chan *Monit) *Collector {
+	serveMux := http.NewServeMux()
 	handler := MakeHTTPHandler(channel)
-	return &Collector{channel, handler}
+	return &Collector{channel, serveMux, handler}
 }
 
 func (collector *Collector) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -458,8 +460,8 @@ func (collector *Collector) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (collector *Collector) Serve() {
-	http.HandleFunc("/collector", collector.ServeHTTP)
-	err := http.ListenAndServe(":8080", nil)
+	collector.ServeMux.HandleFunc("/collector", collector.ServeHTTP)
+	err := http.ListenAndServe(":5001", collector.ServeMux)
 	if err != nil {
 		log.Fatal("http.ListenAndServe: ", err)
 	}
