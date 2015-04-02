@@ -3,7 +3,7 @@ package gomonit
 import (
 	"encoding/xml"
     // "github.com/davecgh/go-spew/spew"
-    // "reflect"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -64,5 +64,56 @@ func (d *FakeDecoder) Close() {
 func (d *FakeDecoder) AssertDone(t *testing.T) {
 	if _, more := <-d.Calls; more {
 		t.Fatal("Did not expect more calls")
+	}
+}
+
+func TestServiceTypes(t *testing.T) {
+	cases := []struct {
+		Name string
+		Type uint
+	}{
+		{"Filesystem", 0},
+		{"Directory", 1},
+		{"File", 2},
+		{"Process", 3},
+		{"System", 5},
+		{"Fifo", 6},
+		{"Program", 7},
+		{"Net", 8},
+	}
+
+	for i, c := range cases {
+		service := new(Service)
+		service.Name = c.Name
+		service.Type = c.Type
+		serviceValue := reflect.ValueOf(service)
+
+		ni := i + 1
+		if ni >= len(cases) {
+			ni = 0
+		}
+		wrongName := cases[ni].Name
+		methodName := "Get" + c.Name
+
+		typeOf := reflect.TypeOf(service)
+		method, found := typeOf.MethodByName(methodName)
+
+		if !found {
+			t.Errorf("Method %s doesn't exist", methodName)
+		}
+
+		resValue := method.Func.Call([]reflect.Value{serviceValue})
+
+		if !resValue[1].IsNil() {
+			t.Errorf("Method %s returned error with type %s", methodName, service.Name)
+		}
+
+		methodName = "Get" + wrongName
+		method, found = typeOf.MethodByName(methodName)
+		resValue = method.Func.Call([]reflect.Value{serviceValue})
+
+		if resValue[1].IsNil() {
+			t.Errorf("Method %s didn't return error with type %s", methodName, service.Name)
+		}
 	}
 }
