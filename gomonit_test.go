@@ -2,7 +2,6 @@ package gomonit
 
 import (
 	"encoding/xml"
-    // "github.com/davecgh/go-spew/spew"
 	"reflect"
 	"strings"
 	"testing"
@@ -115,5 +114,24 @@ func TestServiceTypes(t *testing.T) {
 		if resValue[1].IsNil() {
 			t.Errorf("Method %s didn't return error with type %s", methodName, service.Name)
 		}
+	}
+}
+
+func ExampleCollector() {
+	// create channel and pass it to collector
+	channel := make(chan *gomonit.Monit)
+	collector := gomonit.NewCollector(channel)
+	http.Handle("/collector", collector)
+
+	go func() {
+		err := http.ListenAndServe(":8080", nil)
+		if err != nil {
+			log.Fatal("http.ListenAndServe: ", err)
+		}
+	}()
+
+	// consume notifications
+	for monit := range channel {
+		fmt.Println(monit.Server.Uptime)
 	}
 }
