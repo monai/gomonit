@@ -1,3 +1,4 @@
+// Package gomonit consumes and parses Monit status and event notifications. It disguises as M/Monit collector server.
 package gomonit
 
 import (
@@ -11,6 +12,7 @@ import (
 	"time"
 )
 
+// Monit struct represents root XML node.
 type Monit struct {
 	Id            string         `xml:"id,attr"`
 	Incarnation   string         `xml:"incarnation,attr"`
@@ -22,6 +24,7 @@ type Monit struct {
 	Event         Event          `xml:"event"`
 }
 
+// Server represents monit>server node.
 type Server struct {
 	Uptime        int         `xml:"uptime"`
 	Poll          int         `xml:"poll"`
@@ -32,17 +35,20 @@ type Server struct {
 	Credentials   Credentials `xml:"credentials"`
 }
 
+// Httpd represents monit>server>httpd node.
 type Httpd struct {
 	Address string `xml:"address"`
 	Port    int    `xml:"port"`
 	Ssl     int    `xml:"ssl"`
 }
 
+// Credentials represents monit>server>credentials node.
 type Credentials struct {
 	Username string `xml:"username"`
 	Password string `xml:"password"`
 }
 
+// Platform represents monit>platform node.
 type Platform struct {
 	Name    string `xml:"name"`
 	Release string `xml:"release"`
@@ -53,6 +59,7 @@ type Platform struct {
 	Swap    string `xml:"swap"`
 }
 
+// Monit service type identifiers.
 const (
 	ServiceTypeFilesystem uint = 0
 	ServiceTypeDirectory       = 1
@@ -64,6 +71,7 @@ const (
 	ServiceTypeNet             = 8
 )
 
+// Service struct represents generalized monit>services>service XML node. It's used internally for XML parsing purposes and concrete service types should be used.
 type Service struct {
 	Name          string         `xml:"name,attr"`
 	Type          uint           `xml:"type"`
@@ -94,6 +102,7 @@ type Service struct {
 	Link          Link           `xml:"link"`
 }
 
+// Returns concrete Filesystem service struct.
 func (service *Service) GetFilesystem() (Filesystem, error) {
 	var filesystem Filesystem
 	var err error = nil
@@ -107,6 +116,7 @@ func (service *Service) GetFilesystem() (Filesystem, error) {
 	return filesystem, err
 }
 
+// Returns concrete Directory service struct.
 func (service *Service) GetDirectory() (Directory, error) {
 	var directory Directory
 	var err error = nil
@@ -120,6 +130,7 @@ func (service *Service) GetDirectory() (Directory, error) {
 	return directory, err
 }
 
+// Returns concrete File service struct.
 func (service *Service) GetFile() (File, error) {
 	var file File
 	var err error = nil
@@ -133,6 +144,7 @@ func (service *Service) GetFile() (File, error) {
 	return file, err
 }
 
+// Returns concrete Process service struct.
 func (service *Service) GetProcess() (Process, error) {
 	var process Process
 	var err error = nil
@@ -146,6 +158,7 @@ func (service *Service) GetProcess() (Process, error) {
 	return process, err
 }
 
+// Returns concrete System service struct.
 func (service *Service) GetSystem() (System, error) {
 	var system System
 	var err error = nil
@@ -163,6 +176,7 @@ func (service *Service) GetSystem() (System, error) {
 	return system, err
 }
 
+// Returns concrete Fifo service struct.
 func (service *Service) GetFifo() (Fifo, error) {
 	var fifo Fifo
 	var err error = nil
@@ -176,6 +190,7 @@ func (service *Service) GetFifo() (Fifo, error) {
 	return fifo, err
 }
 
+// Returns concrete Program service struct.
 func (service *Service) GetProgram() (Program, error) {
 	var program Program
 	var err error = nil
@@ -192,6 +207,7 @@ func (service *Service) GetProgram() (Program, error) {
 	return program, err
 }
 
+// Returns concrete Net service struct.
 func (service *Service) GetNet() (Net, error) {
 	var net Net
 	var err error = nil
@@ -267,6 +283,7 @@ func copyTime(src interface{}, dest interface{}) {
 	field.Set(time.Unix(srcMap["CollectedSec"].(int64), srcMap["CollectedUsec"].(int64)))
 }
 
+// Filesystem represents concrete service XML node.
 type Filesystem struct {
 	Name          string
 	Type          uint
@@ -284,12 +301,14 @@ type Filesystem struct {
 	Inode         FilesystemSize
 }
 
+// FilesystemSize represents filesystem size XML node.
 type FilesystemSize struct {
 	Percent float32 `xml:"percent"`
 	Usage   float64 `xml:"usage"`
 	Total   float64 `xml:"total"`
 }
 
+// Directory represents concrete service XML node.
 type Directory struct {
 	Name          string
 	Type          uint
@@ -305,6 +324,7 @@ type Directory struct {
 	Timestamp     time.Time
 }
 
+// File represents concrete service XML node.
 type File struct {
 	Name          string
 	Type          uint
@@ -321,6 +341,7 @@ type File struct {
 	Size          uint64
 }
 
+// Process represents concrete service XML node.
 type Process struct {
 	Name          string
 	Type          uint
@@ -340,6 +361,7 @@ type Process struct {
 	Cpu           ProcessCpu
 }
 
+// System represents concrete service XML node.
 type System struct {
 	Name          string
 	Type          uint
@@ -355,6 +377,7 @@ type System struct {
 	Swap          Swap
 }
 
+// Fifo represents concrete service XML node.
 type Fifo struct {
 	Name          string
 	Type          uint
@@ -370,6 +393,7 @@ type Fifo struct {
 	Timestamp     time.Time
 }
 
+// Program represents concrete service XML node.
 type Program struct {
 	Name          string
 	Type          uint
@@ -383,6 +407,7 @@ type Program struct {
 	Output        string
 }
 
+// net represents concrete service XML node.
 type Net struct {
 	Name          string
 	Type          uint
@@ -403,6 +428,7 @@ type Net struct {
 	UlErrors      NetLinkCount
 }
 
+// ServiceSystem represents monit>service>system XML node.
 type ServiceSystem struct {
 	Cpu    SystemCpu `xml:"cpu"`
 	Memory Memory    `xml:"memory"`
@@ -410,12 +436,14 @@ type ServiceSystem struct {
 	Swap   Swap      `xml:"swap"`
 }
 
+// ServiceProgram represents monit>service>program XML node.
 type ServiceProgram struct {
 	Status  uint   `xml:"status"`
 	Started uint64 `xml:"started"`
 	Output  string `xml:"output"`
 }
 
+// Memory represents memory XML node.
 type Memory struct {
 	Percent       float64 `xml:"percent"`
 	PercentTotal  float64 `xml:"percenttotal"`
@@ -423,28 +451,33 @@ type Memory struct {
 	KilobyteTotal uint    `xml:"kilobytetotal"`
 }
 
+// SystemCpu represents monit>service>system>cpu XML node.
 type SystemCpu struct {
 	User   float64 `xml:"user"`
 	System float64 `xml:"system"`
 	Wait   float64 `xml:"wait"`
 }
 
+// ProcessSystem represents monit>service>cpu XML node.
 type ProcessCpu struct {
 	Percent      float64 `xml:"percent"`
 	PercentTotal float64 `xml:"percenttotal"`
 }
 
+// Load represents monit>service>system>load XML node.
 type Load struct {
 	Avg01 float64 `xml:"avg01"`
 	Avg05 float64 `xml:"avg05"`
 	Avg15 float64 `xml:"avg15"`
 }
 
+// Swap represents monit>service>system>swap XML node.
 type Swap struct {
 	Percent  float64 `xml:"percent"`
 	Kilobyte int     `xml:"kilobyte"`
 }
 
+// Link represents monit>service>link XML node.
 type Link struct {
 	State     uint         `xml:"state"`
 	Speed     uint64       `xml:"speed"`
@@ -457,16 +490,19 @@ type Link struct {
 	UlErrors  NetLinkCount `xml:"upload>errors"`
 }
 
+// NetLinkCount represents monit>service>link upload/download counter XML node.
 type NetLinkCount struct {
 	Now   uint64 `xml:"now"`
 	Total uint64 `xml:"total"`
 }
 
+// ServiceGroup represents monit>servicegroup XML node.
 type ServiceGroup struct {
 	Name    string `xml:"name,attr"`
 	Service string `xml:"service"`
 }
 
+// Event represents monit>event XML node.
 type Event struct {
 	CollectedSec  int    `xml:"collected_sec"`
 	CollectedUsec int    `xml:"collected_usec"`
@@ -479,14 +515,17 @@ type Event struct {
 	Token         string `xml:"token"`
 }
 
+// Decoder implements XML decoder.
 type Decoder interface {
 	DecodeElement(interface{}, *xml.StartElement) error
 }
 
+// Parser is Monit notification decoder.
 type Parser struct {
 	Decoder Decoder
 }
 
+// NewParser returns a new Parser.
 func NewParser(reader io.Reader) *Parser {
 	decoder := xml.NewDecoder(reader)
 	decoder.CharsetReader = charset.NewReader
@@ -494,26 +533,32 @@ func NewParser(reader io.Reader) *Parser {
 	return &Parser{decoder}
 }
 
+// Parse returns decoded Monit notification.
 func (parser *Parser) Parse() Monit {
 	var monit Monit
 	parser.Decoder.DecodeElement(&monit, nil)
 	return monit
 }
 
+// Collector is implementation of M/Monit servers /collector endpoint.
 type Collector struct {
 	Channel chan *Monit
 	Handler http.HandlerFunc
 }
 
+// NewCollector returns a new Collector.
 func NewCollector(channel chan *Monit) *Collector {
 	handler := MakeHTTPHandler(channel)
 	return &Collector{channel, handler}
 }
 
+// ServeHTTP implements an http.Handler that collects Monit monitifications.
 func (collector *Collector) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	collector.Handler(w, r)
 }
 
+// MakeHTTPHandler returns http.HandlerFunc function that parses HTTP request body and
+// pipes result to provided channel.
 func MakeHTTPHandler(out chan *Monit) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
