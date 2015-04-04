@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 type Monit struct {
@@ -67,8 +68,8 @@ const (
 type Service struct {
 	Name          string         `xml:"name,attr"`
 	Type          uint           `xml:"type"`
-	CollectedSec  uint           `xml:"collected_sec"`
-	CollectedUsec uint           `xml:"collected_usec"`
+	CollectedSec  int64          `xml:"collected_sec"`
+	CollectedUsec int64          `xml:"collected_usec"`
 	Status        uint           `xml:"status"`
 	StatusHint    uint           `xml:"status_hint"`
 	Monitor       uint           `xml:"monitor"`
@@ -220,21 +221,20 @@ func copy(src interface{}, dest interface{}) {
 
 	for _, destField := range destStruct.Fields() {
 		srcField, ok := srcStruct.FieldOk(destField.Name())
-		srcValue := srcField.Value()
 
 		if ok {
+			srcValue := srcField.Value()
 			destField.Set(srcValue)
 		}
-
 	}
+
+	copyTime(src, dest)
 }
 
 func copyCommon(src interface{}, dest interface{}) {
 	keys := [9]string{
 		"Name",
 		"Type",
-		"CollectedSec",
-		"CollectedUsec",
 		"Status",
 		"StatusHint",
 		"Monitor",
@@ -250,24 +250,33 @@ func copyCommon(src interface{}, dest interface{}) {
 			field.Set(srcMap[key])
 		}
 	}
+
+	copyTime(src, dest)
+}
+
+func copyTime(src interface{}, dest interface{}) {
+	srcMap := structs.Map(src)
+	destStruct := structs.New(dest)
+
+	field := destStruct.Field("Time")
+	field.Set(time.Unix(srcMap["CollectedSec"].(int64), srcMap["CollectedUsec"].(int64)))
 }
 
 type Filesystem struct {
-	Name          string         `xml:"name,attr"`
-	Type          uint           `xml:"type"`
-	CollectedSec  uint           `xml:"collected_sec"`
-	CollectedUsec uint           `xml:"collected_usec"`
-	Status        uint           `xml:"status"`
-	StatusHint    uint           `xml:"status_hint"`
-	Monitor       uint           `xml:"monitor"`
-	MonitorMode   uint           `xml:"monitormode"`
-	PendingAction uint           `xml:"pendingaction"`
-	Mode          string         `xml:"mode"`
-	Uid           uint           `xml:"uid"`
-	Gid           uint           `xml:"gid"`
-	Flags         uint           `xml:"flags"`
-	Block         FilesystemSize `xml:"block"`
-	Inode         FilesystemSize `xml:"inode"`
+	Name          string
+	Type          uint
+	Time          time.Time
+	Status        uint
+	StatusHint    uint
+	Monitor       uint
+	MonitorMode   uint
+	PendingAction uint
+	Mode          string
+	Uid           uint
+	Gid           uint
+	Flags         uint
+	Block         FilesystemSize
+	Inode         FilesystemSize
 }
 
 type FilesystemSize struct {
@@ -277,123 +286,116 @@ type FilesystemSize struct {
 }
 
 type Directory struct {
-	Name          string `xml:"name,attr"`
-	Type          uint   `xml:"type"`
-	CollectedSec  uint   `xml:"collected_sec"`
-	CollectedUsec uint   `xml:"collected_usec"`
-	Status        uint   `xml:"status"`
-	StatusHint    uint   `xml:"status_hint"`
-	Monitor       uint   `xml:"monitor"`
-	MonitorMode   uint   `xml:"monitormode"`
-	PendingAction uint   `xml:"pendingaction"`
-	Mode          string `xml:"mode"`
-	Uid           uint   `xml:"uid"`
-	Gid           uint   `xml:"gid"`
-	Timestamp     uint64 `xml:"timestamp"`
+	Name          string
+	Type          uint
+	Time          time.Time
+	Status        uint
+	StatusHint    uint
+	Monitor       uint
+	MonitorMode   uint
+	PendingAction uint
+	Mode          string
+	Uid           uint
+	Gid           uint
+	Timestamp     uint64
 }
 
 type File struct {
-	Name          string `xml:"name,attr"`
-	Type          uint   `xml:"type"`
-	CollectedSec  uint   `xml:"collected_sec"`
-	CollectedUsec uint   `xml:"collected_usec"`
-	Status        uint   `xml:"status"`
-	StatusHint    uint   `xml:"status_hint"`
-	Monitor       uint   `xml:"monitor"`
-	MonitorMode   uint   `xml:"monitormode"`
-	PendingAction uint   `xml:"pendingaction"`
-	Mode          string `xml:"mode"`
-	Uid           uint   `xml:"uid"`
-	Gid           uint   `xml:"gid"`
-	Timestamp     uint64 `xml:"timestamp"`
-	Size          uint64 `xml:"size"`
+	Name          string
+	Type          uint
+	Time          time.Time
+	Status        uint
+	StatusHint    uint
+	Monitor       uint
+	MonitorMode   uint
+	PendingAction uint
+	Mode          string
+	Uid           uint
+	Gid           uint
+	Timestamp     uint64
+	Size          uint64
 }
 
 type Process struct {
-	Name          string     `xml:"name,attr"`
-	Type          uint       `xml:"type"`
-	CollectedSec  uint       `xml:"collected_sec"`
-	CollectedUsec uint       `xml:"collected_usec"`
-	Status        uint       `xml:"status"`
-	StatusHint    uint       `xml:"status_hint"`
-	Monitor       uint       `xml:"monitor"`
-	MonitorMode   uint       `xml:"monitormode"`
-	PendingAction uint       `xml:"pendingaction"`
-	Pid           uint       `xml:"pid"`
-	PPid          uint       `xml:"ppid"`
-	Euid          uint       `xml:"euid"`
-	Gid           uint       `xml:"gid"`
-	Uptime        uint64     `xml:"uptime"`
-	Children      uint       `xml:"children"`
-	Memory        Memory     `xml:"memory"`
-	Cpu           ProcessCpu `xml:"cpu"`
+	Name          string
+	Type          uint
+	Time          time.Time
+	Status        uint
+	StatusHint    uint
+	Monitor       uint
+	MonitorMode   uint
+	PendingAction uint
+	Pid           uint
+	PPid          uint
+	Euid          uint
+	Gid           uint
+	Uptime        uint64
+	Children      uint
+	Memory        Memory
+	Cpu           ProcessCpu
 }
 
 type System struct {
-	Name          string    `xml:"name,attr"`
-	Type          uint      `xml:"type"`
-	CollectedSec  uint      `xml:"collected_sec"`
-	CollectedUsec uint      `xml:"collected_usec"`
-	Status        uint      `xml:"status"`
-	StatusHint    uint      `xml:"status_hint"`
-	Monitor       uint      `xml:"monitor"`
-	MonitorMode   uint      `xml:"monitormode"`
-	PendingAction uint      `xml:"pendingaction"`
-	Cpu           SystemCpu `xml:"system>cpu"`
-	Memory        Memory    `xml:"system>memory"`
-	Load          Load      `xml:"system>load"`
-	Swap          Swap      `xml:"system>swap"`
+	Name          string
+	Type          uint
+	Time          time.Time
+	Status        uint
+	StatusHint    uint
+	Monitor       uint
+	MonitorMode   uint
+	PendingAction uint
+	Cpu           SystemCpu
+	Memory        Memory
+	Load          Load
+	Swap          Swap
 }
 
 type Fifo struct {
-	Name          string `xml:"name,attr"`
-	Type          uint   `xml:"type"`
-	CollectedSec  uint   `xml:"collected_sec"`
-	CollectedUsec uint   `xml:"collected_usec"`
-	Status        uint   `xml:"status"`
-	StatusHint    uint   `xml:"status_hint"`
-	Monitor       uint   `xml:"monitor"`
-	MonitorMode   uint   `xml:"monitormode"`
-	PendingAction uint   `xml:"pendingaction"`
-	Mode          string `xml:"mode"`
-	Uid           uint   `xml:"uid"`
-	Gid           uint   `xml:"gid"`
-	Timestamp     uint64 `xml:"timestamp"`
+	Name          string
+	Type          uint
+	Time          time.Time
+	Status        uint
+	StatusHint    uint
+	Monitor       uint
+	MonitorMode   uint
+	PendingAction uint
+	Mode          string
+	Uid           uint
+	Gid           uint
+	Timestamp     uint64
 }
 
 type Program struct {
-	Name          string `xml:"name,attr"`
-	Type          uint   `xml:"type"`
-	CollectedSec  uint   `xml:"collected_sec"`
-	CollectedUsec uint   `xml:"collected_usec"`
-	Status        uint   `xml:"status"`
-	StatusHint    uint   `xml:"status_hint"`
-	Monitor       uint   `xml:"monitor"`
-	MonitorMode   uint   `xml:"monitormode"`
-	PendingAction uint   `xml:"pendingaction"`
-	Started       uint64 `xml:"started"`
-	Output        string `xml:"output"`
+	Name          string
+	Type          uint
+	Time          time.Time
+	Status        uint
+	StatusHint    uint
+	Monitor       uint
+	MonitorMode   uint
+	PendingAction uint
+	Started       uint64
+	Output        string
 }
 
 type Net struct {
-	Name          string       `xml:"name,attr"`
-	Type          uint         `xml:"type"`
-	CollectedSec  uint         `xml:"collected_sec"`
-	CollectedUsec uint         `xml:"collected_usec"`
-	Status        uint         `xml:"status"`
-	StatusHint    uint         `xml:"status_hint"`
-	Monitor       uint         `xml:"monitor"`
-	MonitorMode   uint         `xml:"monitormode"`
-	PendingAction uint         `xml:"pendingaction"`
-	State         uint         `xml:"state"`
-	Speed         uint64       `xml:"speed"`
-	Duplex        uint         `xml:"duplex"`
-	DlPackets     NetLinkCount `xml:"download>packets"`
-	DlBytes       NetLinkCount `xml:"download>bytes"`
-	DlErrors      NetLinkCount `xml:"download>errors"`
-	UlPackets     NetLinkCount `xml:"upload>packets"`
-	UlBytes       NetLinkCount `xml:"upload>bytes"`
-	UlErrors      NetLinkCount `xml:"upload>errors"`
+	Name          string
+	Type          uint
+	Time          time.Time
+	Status        uint
+	StatusHint    uint
+	Monitor       uint
+	MonitorMode   uint
+	PendingAction uint
+	State         uint
+	Speed         uint64
+	Duplex        uint
+	DlPackets     NetLinkCount
+	DlBytes       NetLinkCount
+	DlErrors      NetLinkCount
+	UlPackets     NetLinkCount
+	UlBytes       NetLinkCount
+	UlErrors      NetLinkCount
 }
 
 type ServiceSystem struct {
