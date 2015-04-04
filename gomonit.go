@@ -7,7 +7,6 @@ import (
 	"errors"
 	"github.com/fatih/structs"
 	"io"
-	"log"
 	"net/http"
 	"time"
 )
@@ -496,27 +495,17 @@ func (parser *Parser) Parse() Monit {
 }
 
 type Collector struct {
-	Channel  chan *Monit
-	ServeMux *http.ServeMux
-	Handler  http.HandlerFunc
+	Channel chan *Monit
+	Handler http.HandlerFunc
 }
 
 func NewCollector(channel chan *Monit) *Collector {
-	serveMux := http.NewServeMux()
 	handler := MakeHTTPHandler(channel)
-	return &Collector{channel, serveMux, handler}
+	return &Collector{channel, handler}
 }
 
 func (collector *Collector) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	collector.Handler(w, r)
-}
-
-func (collector *Collector) Serve() {
-	collector.ServeMux.HandleFunc("/collector", collector.ServeHTTP)
-	err := http.ListenAndServe(":5001", collector.ServeMux)
-	if err != nil {
-		log.Fatal("http.ListenAndServe: ", err)
-	}
 }
 
 func MakeHTTPHandler(out chan *Monit) http.HandlerFunc {
