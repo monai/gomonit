@@ -80,7 +80,7 @@ type Service struct {
 	Flags         uint           `xml:"flags"`
 	Block         FilesystemSize `xml:"block"`
 	Inode         FilesystemSize `xml:"inode"`
-	Timestamp     uint64         `xml:"timestamp"`
+	Timestamp     int64          `xml:"timestamp"`
 	Size          uint64         `xml:"size"`
 	Pid           uint           `xml:"pid"`
 	PPid          uint           `xml:"ppid"`
@@ -219,11 +219,17 @@ func copy(src interface{}, dest interface{}) {
 	destStruct := structs.New(dest)
 
 	for _, destField := range destStruct.Fields() {
-		srcField, ok := srcStruct.FieldOk(destField.Name())
+		destFieldName := destField.Name()
+		srcField, ok := srcStruct.FieldOk(destFieldName)
 
 		if ok {
 			srcValue := srcField.Value()
-			destField.Set(srcValue)
+
+			if destFieldName == "Timestamp" {
+				destField.Set(time.Unix(srcValue.(int64), 0))
+			} else {
+				destField.Set(srcValue)
+			}
 		}
 	}
 
@@ -296,7 +302,7 @@ type Directory struct {
 	Mode          string
 	Uid           uint
 	Gid           uint
-	Timestamp     uint64
+	Timestamp     time.Time
 }
 
 type File struct {
@@ -311,7 +317,7 @@ type File struct {
 	Mode          string
 	Uid           uint
 	Gid           uint
-	Timestamp     uint64
+	Timestamp     time.Time
 	Size          uint64
 }
 
@@ -361,7 +367,7 @@ type Fifo struct {
 	Mode          string
 	Uid           uint
 	Gid           uint
-	Timestamp     uint64
+	Timestamp     time.Time
 }
 
 type Program struct {
