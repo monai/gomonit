@@ -118,7 +118,7 @@ func TestServiceTypes(t *testing.T) {
 }
 
 func ExampleCollector() {
-	// create channel and pass it to collector
+	// create channel and pass it to the collector
 	channel := make(chan *gomonit.Monit)
 	collector := gomonit.NewCollector(channel)
 	http.Handle("/collector", collector)
