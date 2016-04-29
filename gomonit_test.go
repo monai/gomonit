@@ -2,9 +2,14 @@ package gomonit
 
 import (
 	"encoding/xml"
+	"fmt"
+	"log"
+	"net/http"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/monai/gomonit"
 )
 
 func TestParse(t *testing.T) {
@@ -108,7 +113,7 @@ func TestServiceTypes(t *testing.T) {
 		}
 
 		methodName = "Get" + wrongName
-		method, found = typeOf.MethodByName(methodName)
+		method, _ = typeOf.MethodByName(methodName)
 		resValue = method.Func.Call([]reflect.Value{serviceValue})
 
 		if resValue[1].IsNil() {

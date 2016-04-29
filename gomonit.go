@@ -2,19 +2,21 @@
 package gomonit
 
 import (
-	"code.google.com/p/go-charset/charset"
-	_ "code.google.com/p/go-charset/data"
 	"encoding/xml"
 	"errors"
-	"github.com/fatih/structs"
 	"io"
 	"net/http"
 	"time"
+
+	"code.google.com/p/go-charset/charset"
+	// This comment justifies usage of blank import. Thanks golint
+	_ "code.google.com/p/go-charset/data"
+	"github.com/fatih/structs"
 )
 
 // Monit struct represents root XML node.
 type Monit struct {
-	Id            string         `xml:"id,attr"`
+	ID            string         `xml:"id,attr"`
 	Incarnation   string         `xml:"incarnation,attr"`
 	Version       string         `xml:"version,attr"`
 	Server        Server         `xml:"server"`
@@ -54,7 +56,7 @@ type Platform struct {
 	Release string `xml:"release"`
 	Version string `xml:"version"`
 	Machine string `xml:"machine"`
-	Cpu     string `xml:"cpu"`
+	CPU     string `xml:"cpu"`
 	Memory  string `xml:"memory"`
 	Swap    string `xml:"swap"`
 }
@@ -83,8 +85,8 @@ type Service struct {
 	MonitorMode   uint           `xml:"monitormode"`
 	PendingAction uint           `xml:"pendingaction"`
 	Mode          string         `xml:"mode"`
-	Uid           uint           `xml:"uid"`
-	Gid           uint           `xml:"gid"`
+	UID           uint           `xml:"uid"`
+	GID           uint           `xml:"gid"`
 	Flags         uint           `xml:"flags"`
 	Block         FilesystemSize `xml:"block"`
 	Inode         FilesystemSize `xml:"inode"`
@@ -96,16 +98,16 @@ type Service struct {
 	Uptime        uint64         `xml:"uptime"`
 	Children      uint           `xml:"children"`
 	Memory        Memory         `xml:"memory"`
-	Cpu           ProcessCpu     `xml:"cpu"`
+	CPU           ProcessCPU     `xml:"cpu"`
 	System        ServiceSystem  `xml:"system"`
 	Program       ServiceProgram `xml:"program"`
 	Link          Link           `xml:"link"`
 }
 
-// Returns concrete Filesystem service struct.
+// GetFilesystem returns concrete Filesystem service struct.
 func (service *Service) GetFilesystem() (Filesystem, error) {
 	var filesystem Filesystem
-	var err error = nil
+	var err error
 
 	if service.Type == ServiceTypeFilesystem {
 		copy(service, &filesystem)
@@ -116,10 +118,10 @@ func (service *Service) GetFilesystem() (Filesystem, error) {
 	return filesystem, err
 }
 
-// Returns concrete Directory service struct.
+// GetDirectory returns concrete Directory service struct.
 func (service *Service) GetDirectory() (Directory, error) {
 	var directory Directory
-	var err error = nil
+	var err error
 
 	if service.Type == ServiceTypeDirectory {
 		copy(service, &directory)
@@ -130,10 +132,10 @@ func (service *Service) GetDirectory() (Directory, error) {
 	return directory, err
 }
 
-// Returns concrete File service struct.
+// GetFile returns concrete File service struct.
 func (service *Service) GetFile() (File, error) {
 	var file File
-	var err error = nil
+	var err error
 
 	if service.Type == ServiceTypeFile {
 		copy(service, &file)
@@ -144,10 +146,10 @@ func (service *Service) GetFile() (File, error) {
 	return file, err
 }
 
-// Returns concrete Process service struct.
+// GetProcess returns concrete Process service struct.
 func (service *Service) GetProcess() (Process, error) {
 	var process Process
-	var err error = nil
+	var err error
 
 	if service.Type == ServiceTypeProcess {
 		copy(service, &process)
@@ -158,14 +160,14 @@ func (service *Service) GetProcess() (Process, error) {
 	return process, err
 }
 
-// Returns concrete System service struct.
+// GetSystem returns concrete System service struct.
 func (service *Service) GetSystem() (System, error) {
 	var system System
-	var err error = nil
+	var err error
 
 	if service.Type == ServiceTypeSystem {
 		copyCommon(service, &system)
-		system.Cpu = service.System.Cpu
+		system.CPU = service.System.CPU
 		system.Memory = service.System.Memory
 		system.Load = service.System.Load
 		system.Swap = service.System.Swap
@@ -176,10 +178,10 @@ func (service *Service) GetSystem() (System, error) {
 	return system, err
 }
 
-// Returns concrete Fifo service struct.
+// GetFifo returns concrete Fifo service struct.
 func (service *Service) GetFifo() (Fifo, error) {
 	var fifo Fifo
-	var err error = nil
+	var err error
 
 	if service.Type == ServiceTypeFifo {
 		copy(service, &fifo)
@@ -190,10 +192,10 @@ func (service *Service) GetFifo() (Fifo, error) {
 	return fifo, err
 }
 
-// Returns concrete Program service struct.
+// GetProgram returns concrete Program service struct.
 func (service *Service) GetProgram() (Program, error) {
 	var program Program
-	var err error = nil
+	var err error
 
 	if service.Type == ServiceTypeProgram {
 		copyCommon(service, &program)
@@ -207,10 +209,10 @@ func (service *Service) GetProgram() (Program, error) {
 	return program, err
 }
 
-// Returns concrete Net service struct.
+// GetNet returns concrete Net service struct.
 func (service *Service) GetNet() (Net, error) {
 	var net Net
-	var err error = nil
+	var err error
 
 	if service.Type == ServiceTypeNet {
 		copyCommon(service, &net)
@@ -294,8 +296,8 @@ type Filesystem struct {
 	MonitorMode   uint
 	PendingAction uint
 	Mode          string
-	Uid           uint
-	Gid           uint
+	UID           uint
+	GID           uint
 	Flags         uint
 	Block         FilesystemSize
 	Inode         FilesystemSize
@@ -319,8 +321,8 @@ type Directory struct {
 	MonitorMode   uint
 	PendingAction uint
 	Mode          string
-	Uid           uint
-	Gid           uint
+	UID           uint
+	GID           uint
 	Timestamp     time.Time
 }
 
@@ -335,8 +337,8 @@ type File struct {
 	MonitorMode   uint
 	PendingAction uint
 	Mode          string
-	Uid           uint
-	Gid           uint
+	UID           uint
+	GID           uint
 	Timestamp     time.Time
 	Size          uint64
 }
@@ -358,7 +360,7 @@ type Process struct {
 	Uptime        uint64
 	Children      uint
 	Memory        Memory
-	Cpu           ProcessCpu
+	CPU           ProcessCPU
 }
 
 // System represents concrete service XML node.
@@ -371,7 +373,7 @@ type System struct {
 	Monitor       uint
 	MonitorMode   uint
 	PendingAction uint
-	Cpu           SystemCpu
+	CPU           SystemCPU
 	Memory        Memory
 	Load          Load
 	Swap          Swap
@@ -388,8 +390,8 @@ type Fifo struct {
 	MonitorMode   uint
 	PendingAction uint
 	Mode          string
-	Uid           uint
-	Gid           uint
+	UID           uint
+	GID           uint
 	Timestamp     time.Time
 }
 
@@ -407,7 +409,7 @@ type Program struct {
 	Output        string
 }
 
-// net represents concrete service XML node.
+// Net represents concrete service XML node.
 type Net struct {
 	Name          string
 	Type          uint
@@ -430,7 +432,7 @@ type Net struct {
 
 // ServiceSystem represents monit>service>system XML node.
 type ServiceSystem struct {
-	Cpu    SystemCpu `xml:"cpu"`
+	CPU    SystemCPU `xml:"cpu"`
 	Memory Memory    `xml:"memory"`
 	Load   Load      `xml:"load"`
 	Swap   Swap      `xml:"swap"`
@@ -451,15 +453,15 @@ type Memory struct {
 	KilobyteTotal uint    `xml:"kilobytetotal"`
 }
 
-// SystemCpu represents monit>service>system>cpu XML node.
-type SystemCpu struct {
+// SystemCPU represents monit>service>system>cpu XML node.
+type SystemCPU struct {
 	User   float64 `xml:"user"`
 	System float64 `xml:"system"`
 	Wait   float64 `xml:"wait"`
 }
 
-// ProcessSystem represents monit>service>cpu XML node.
-type ProcessCpu struct {
+// ProcessCPU represents monit>service>cpu XML node.
+type ProcessCPU struct {
 	Percent      float64 `xml:"percent"`
 	PercentTotal float64 `xml:"percenttotal"`
 }
@@ -508,7 +510,7 @@ type Event struct {
 	CollectedUsec int    `xml:"collected_usec"`
 	Service       string `xml:"service"`
 	Type          int    `xml:"type"`
-	Id            int    `xml:"id"`
+	ID            int    `xml:"id"`
 	State         int    `xml:"state"`
 	Action        int    `xml:"action"`
 	Message       string `xml:"message,chardata"`
